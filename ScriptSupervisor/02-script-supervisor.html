@@ -375,6 +375,8 @@ Is this a story worth telling — and is this version telling it well? One hones
         })
       });
 
+      if (!response.ok) throw new Error(await response.text());
+
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";

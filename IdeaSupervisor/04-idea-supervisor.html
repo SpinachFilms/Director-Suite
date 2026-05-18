@@ -306,6 +306,8 @@ First meaningful milestone: [what does early traction look like?]
         })
       });
 
+      if (!response.ok) throw new Error(await response.text());
+
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";

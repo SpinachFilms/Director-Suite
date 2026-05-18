@@ -505,6 +505,8 @@ Specific goal: ${goal || 'not specified'}`;
         })
       });
 
+      if (!response.ok) throw new Error(await response.text());
+
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
@@ -628,6 +630,8 @@ Platform context: ${document.getElementById('writerPlatform').value}`;
           messages: [{ role: "user", content: userContent }]
         })
       });
+
+      if (!response.ok) throw new Error(await response.text());
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
