@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Idea Supervisor</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0a0a;
+    --surface: #151010;
+    --surface2: #1e1818;
+    --border: #2a2020;
+    --accent: #e8b4a0;
+    --accent2: #d49080;
+    --text: #f0e8e0;
+    --muted: #706058;
+    --success: #7aab8a;
+    --danger: #c97b5a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.4;
+  }
+  .header {
+    padding: 32px 24px 24px;
+    border-bottom: 1px solid var(--border);
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .header-eyebrow { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  .header-title { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--text); line-height: 1.1; margin-bottom: 4px; }
+  .header-sub { font-size: 11px; color: var(--muted); }
+  .container { max-width: 720px; margin: 0 auto; padding: 28px 24px 80px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 22px; margin-bottom: 16px; }
+  .section-label { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+
+  select, textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 18px;
+  }
+  select:focus, textarea:focus { border-color: var(--accent2); }
+  select option { background: var(--surface2); }
+  textarea { resize: vertical; line-height: 1.7; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+  @media(max-width:480px){ .two-col { grid-template-columns: 1fr; } }
+  .two-col select { margin-bottom: 0; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #0d0808;
+    border: none;
+    border-radius: 6px;
+    padding: 11px 24px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn:hover { background: var(--accent2); transform: translateY(-1px); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .spinner-label {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 16px 0;
+  }
+  .spinner-label.visible { display: flex; }
+  .loading-dots { display: inline-flex; gap: 4px; align-items: center; }
+  .loading-dots span { width: 4px; height: 4px; background: var(--accent); border-radius: 50%; animation: dot-pulse 1.2s infinite; }
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dot-pulse { 0%,80%,100%{opacity:0.2;transform:scale(0.8);}40%{opacity:1;transform:scale(1);} }
+
+  .response-area { display: none; animation: fadeIn 0.3s ease; }
+  .response-area.visible { display: block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);} }
+
+  .response-header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .response-body {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0 0 8px 8px;
+    padding: 22px;
+    font-size: 13px;
+    line-height: 1.9;
+    white-space: pre-wrap;
+  }
+
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  @media(max-width:480px){ .category-grid { grid-template-columns: repeat(2, 1fr); } }
+  .cat-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+  .cat-btn:hover { border-color: var(--accent2); color: var(--text); }
+  .cat-btn.active { background: rgba(232,180,160,0.08); border-color: var(--accent); color: var(--accent); }
+  .cat-icon { font-size: 18px; display: block; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-eyebrow">Director Suite · 04</div>
+  <div class="header-title">Idea Supervisor</div>
+  <div class="header-sub">Reality check. Then execution.</div>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <div class="section-label">Idea category</div>
+    <div class="category-grid">
+      <div class="cat-btn active" data-val="video" onclick="selectCat(this)"><span class="cat-icon">🎬</span>Video concept</div>
+      <div class="cat-btn" data-val="app" onclick="selectCat(this)"><span class="cat-icon">📱</span>App / product</div>
+      <div class="cat-btn" data-val="business" onclick="selectCat(this)"><span class="cat-icon">🏢</span>Business offer</div>
+      <div class="cat-btn" data-val="content-series" onclick="selectCat(this)"><span class="cat-icon">📺</span>Content series</div>
+      <div class="cat-btn" data-val="book" onclick="selectCat(this)"><span class="cat-icon">📖</span>Book / writing</div>
+      <div class="cat-btn" data-val="other" onclick="selectCat(this)"><span class="cat-icon">💡</span>Other</div>
+    </div>
+
+    <div class="section-label">Your idea — pitch it raw</div>
+    <textarea id="ideaContent" placeholder="Don't filter. Just describe the idea as clearly as you can. The rougher the idea, the more useful the feedback." style="min-height:160px;"></textarea>
+
+    <div class="section-label">Context</div>
+    <div class="two-col">
+      <div>
+        <div class="section-label">Your primary goal</div>
+        <select id="ideaGoal">
+          <option value="monetize">Generate income</option>
+          <option value="portfolio">Build portfolio / credibility</option>
+          <option value="growth">Audience / follower growth</option>
+          <option value="creative">Creative fulfillment</option>
+          <option value="explore">Just exploring</option>
+        </select>
+      </div>
+      <div>
+        <div class="section-label">Your bandwidth</div>
+        <select id="ideaBandwidth">
+          <option value="low">Low (side project, 2–4h/week)</option>
+          <option value="medium">Medium (serious, 10–20h/week)</option>
+          <option value="high">High (full focus, 40h+/week)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section-label">Additional context <span style="font-size:10px;color:var(--muted);">(optional)</span></div>
+    <textarea id="ideaContext" placeholder="Existing audience size, budget, skills, timeline, relevant experience..." style="min-height:60px;"></textarea>
+
+    <button class="btn" onclick="evaluateIdea()" id="evalBtn">Evaluate this idea →</button>
+  </div>
+
+  <div class="spinner-label" id="loading">
+    <div class="loading-dots"><span></span><span></span><span></span></div>
+    Assessing market viability and building execution plan...
+  </div>
+
+  <div class="response-area" id="responseArea">
+    <div class="response-header"><span>◈</span> Idea Analysis</div>
+    <div class="response-body" id="responseBody"></div>
+  </div>
+
+</div>
+
+<script>
+  let selectedCat = 'video';
+
+  function selectCat(el) {
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    selectedCat = el.dataset.val;
+  }
+
+  async function evaluateIdea() {
+    const idea = document.getElementById('ideaContent').value.trim();
+    const goal = document.getElementById('ideaGoal').value;
+    const bandwidth = document.getElementById('ideaBandwidth').value;
+    const context = document.getElementById('ideaContext').value.trim();
+
+    if (!idea) { alert('Please describe your idea.'); return; }
+
+    const btn = document.getElementById('evalBtn');
+    btn.disabled = true;
+    document.getElementById('loading').classList.add('visible');
+    const body = document.getElementById('responseBody');
+    body.textContent = '';
+    document.getElementById('responseArea').classList.remove('visible');
+
+    const system = `You are a sharp, pragmatic creative strategist and business advisor. You work with content creators, agency owners, and entrepreneurs.
+
+Your job: evaluate ideas with brutal honesty, market knowledge, and a builder's mindset.
+
+You balance optimism (great ideas deserve real plans) with realism (bad timing or weak positioning must be called out).
+
+Always evaluate using:
+1. Market reality — is there demand? What does the landscape look like TODAY?
+2. Differentiation — why would this one win? What's the actual edge?
+3. Effort-to-reward — what does it cost in time/money, and what's the realistic upside?
+4. Creator fit — given their goal and bandwidth, is this the right bet?
+5. Timeline — when would early results appear?
+
+Respond in this exact format:
+
+🧠 IDEA IN ITS BEST FORM
+[Restate the idea as its most compelling, clear version — 2–3 sentences]
+
+📊 VIABILITY SCORE: [X/10]
+[2–3 honest sentences explaining the score]
+
+🌍 MARKET REALITY
+[What is actually happening in this space right now? Be specific about trends, competition density, and opportunity windows.]
+
+⚔️ COMPETITION & DIFFERENTIATION
+[Who's doing this? What would make this version meaningfully different — not just different, but better in a way that matters?]
+
+💰 EFFORT-TO-REWARD ANALYSIS
+Investment required: [be specific — time, money, skills needed]
+Realistic upside: [be specific — income range, growth, other return]
+Verdict: [Is this ratio worth it given their stated bandwidth and goal?]
+
+🗺️ EXECUTION ROADMAP
+Week 1–2: [specific first actions]
+Month 1: [what should exist / be done]
+Month 2–3: [where this should be]
+First meaningful milestone: [what does early traction look like?]
+
+⚠️ TOP 3 RISKS
+1. [Risk + specific mitigation]
+2. [Risk + specific mitigation]
+3. [Risk + specific mitigation]
+
+✅ GO / WAIT / NO-GO
+[Clear recommendation with direct reasoning. If WAIT, explain what condition would change it to GO.]`;
+
+    const userContent = `Category: ${selectedCat}\nGoal: ${goal}\nBandwidth: ${bandwidth}\nAdditional context: ${context || 'None'}\n\nIdea:\n${idea}`;
+
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          stream: true,
+          system,
+          messages: [{ role: "user", content: userContent }]
+        })
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const data = line.slice(6).trim();
+            if (data === "[DONE]") continue;
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.type === "content_block_delta" && parsed.delta?.text) {
+                body.textContent += parsed.delta.text;
+                document.getElementById('responseArea').classList.add('visible');
+              }
+            } catch(e) {}
+          }
+        }
+      }
+    } catch(e) {
+      body.textContent = 'Something went wrong. Please try again.';
+      document.getElementById('responseArea').classList.add('visible');
+    }
+
+    btn.disabled = false;
+    document.getElementById('loading').classList.remove('visible');
+  }
+</script>
+</body>
+</html>

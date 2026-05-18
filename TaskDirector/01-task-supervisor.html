@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Supervisor</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: #222222;
+    --accent: #e8d5a3;
+    --accent2: #c4a882;
+    --text: #f0ebe0;
+    --muted: #6b6560;
+    --danger: #c97b5a;
+    --success: #7aab8a;
+    --priority: #d4845a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.4;
+  }
+  .header {
+    padding: 32px 24px 24px;
+    border-bottom: 1px solid var(--border);
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .header-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .header-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 32px;
+    color: var(--text);
+    line-height: 1.1;
+    margin-bottom: 4px;
+  }
+  .header-sub { font-size: 11px; color: var(--muted); }
+  .container { max-width: 680px; margin: 0 auto; padding: 24px 24px 80px; }
+
+  .date-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+  .task-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .stat {
+    padding: 14px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    text-align: center;
+  }
+  .stat-num { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--accent); }
+  .stat-label { font-size: 9px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  input[type="text"], input[type="number"] {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  input:focus { border-color: var(--accent2); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #0a0a0a;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--accent2); transform: translateY(-1px); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); transform: none; }
+  .btn-sm { padding: 6px 12px; font-size: 10px; }
+
+  .priority-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Mono', monospace;
+    white-space: nowrap;
+  }
+  .priority-toggle.active {
+    background: rgba(212,132,90,0.15);
+    border-color: var(--priority);
+    color: var(--priority);
+  }
+
+  .task-add-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .tasks-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 13px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    transition: all 0.2s;
+    animation: slideIn 0.2s ease;
+  }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  .task-item.done { opacity: 0.35; }
+  .task-item.priority { border-left: 3px solid var(--priority); }
+  .task-item.carried { border-left: 3px solid #3a3530; }
+
+  .task-check {
+    width: 20px;
+    height: 20px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    background: transparent;
+    font-size: 11px;
+    margin-top: 1px;
+  }
+  .task-check.checked { background: var(--success); border-color: var(--success); color: #0a0a0a; }
+
+  .task-body { flex: 1; min-width: 0; }
+  .task-text { font-size: 13px; line-height: 1.5; }
+  .task-text.done { text-decoration: line-through; }
+  .task-meta { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; }
+
+  .badge {
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .badge-priority { background: rgba(212,132,90,0.12); color: var(--priority); border: 1px solid rgba(212,132,90,0.25); }
+  .badge-carried { background: rgba(58,53,48,0.5); color: var(--muted); border: 1px solid var(--border); }
+
+  .task-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: flex-start; }
+  .task-icon-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 15px;
+    padding: 2px 4px;
+    transition: color 0.2s;
+    line-height: 1;
+  }
+  .task-icon-btn:hover { color: var(--danger); }
+  .task-icon-btn.toggle-priority:hover { color: var(--priority); }
+
+  .empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 2;
+  }
+  .empty-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.3; display: block; }
+
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+  .actions-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .limit-warning {
+    background: rgba(201,123,90,0.1);
+    border: 1px solid rgba(201,123,90,0.2);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--danger);
+    margin-bottom: 12px;
+    display: none;
+  }
+  .limit-warning.visible { display: block; }
+
+  .settings-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .settings-row input[type="number"] { width: 70px; text-align: center; }
+  .settings-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+  .progress-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 16px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent)); border-radius: 2px; transition: width 0.4s ease; }
+
+  @media (max-width: 480px) {
+    .task-stats { grid-template-columns: repeat(2, 1fr); }
+    .task-add-row { flex-wrap: wrap; }
+    .task-add-row input { flex: 1 1 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-eyebrow">Director Suite · 01</div>
+  <div class="header-title">Task Supervisor</div>
+  <div class="header-sub">Plan tonight. Execute tomorrow.</div>
+</div>
+
+<div class="container">
+
+  <div class="date-chip" id="dateDisplay">📅 Loading...</div>
+
+  <div class="task-stats">
+    <div class="stat"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Total</div></div>
+    <div class="stat"><div class="stat-num" id="statDone">0</div><div class="stat-label">Done</div></div>
+    <div class="stat"><div class="stat-num" id="statPriority">0</div><div class="stat-label">Priority</div></div>
+    <div class="stat"><div class="stat-num" id="statCarried">0</div><div class="stat-label">Carried</div></div>
+  </div>
+
+  <div class="card">
+    <div class="section-label">Settings</div>
+    <div class="settings-row">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="settings-label">Max tasks</span>
+        <input type="number" id="maxTasks" value="7" min="1" max="20" oninput="saveMeta();updateStats()">
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="settings-label">Priority slots used:</span>
+        <span style="color:var(--priority);font-size:13px;" id="prioritySlots">0 / 3</span>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <div class="limit-warning" id="limitWarning">⚠ Task limit reached. Complete or remove a task to add more.</div>
+
+  <div class="task-add-row">
+    <input type="text" id="newTaskInput" placeholder="New task..." onkeydown="if(event.key==='Enter')addTask()">
+    <button class="priority-toggle" id="priorityBtn" onclick="toggleNewPriority()">⚡ Priority</button>
+    <button class="btn" onclick="addTask()">Add</button>
+  </div>
+
+  <div class="tasks-section-header">
+    <div class="section-label" style="margin:0;">Tasks</div>
+    <button class="btn btn-ghost btn-sm" onclick="rolloverTasks()">↻ Carry unfinished</button>
+  </div>
+
+  <div id="taskList"></div>
+
+  <div class="divider"></div>
+  <div class="actions-row">
+    <button class="btn btn-ghost btn-sm" onclick="clearDone()">Clear completed</button>
+    <button class="btn btn-ghost btn-sm" onclick="clearAll()">Clear all</button>
+  </div>
+
+</div>
+
+<script>
+  let tasks = JSON.parse(localStorage.getItem('ts_tasks') || '[]');
+  let newTaskIsPriority = false;
+
+  function saveTasks() { localStorage.setItem('ts_tasks', JSON.stringify(tasks)); }
+  function saveMeta() {
+    localStorage.setItem('ts_maxTasks', document.getElementById('maxTasks').value);
+  }
+
+  function updateStats() {
+    const max = parseInt(document.getElementById('maxTasks').value) || 7;
+    const total = tasks.length;
+    const done = tasks.filter(t => t.done).length;
+    const priority = tasks.filter(t => t.priority && !t.done).length;
+    const carried = tasks.filter(t => t.carried).length;
+    const active = tasks.filter(t => !t.done).length;
+
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statDone').textContent = done;
+    document.getElementById('statPriority').textContent = priority;
+    document.getElementById('statCarried').textContent = carried;
+    document.getElementById('prioritySlots').textContent = `${priority} / 3`;
+    document.getElementById('progressFill').style.width = total > 0 ? `${(done/total)*100}%` : '0%';
+    document.getElementById('limitWarning').classList.toggle('visible', active >= max);
+  }
+
+  function renderTasks() {
+    const list = document.getElementById('taskList');
+    if (tasks.length === 0) {
+      list.innerHTML = `<div class="empty"><span class="empty-icon">📋</span>No tasks yet.<br>Add your first task above and start planning.</div>`;
+      updateStats();
+      return;
+    }
+
+    const priority = tasks.filter(t => t.priority && !t.done);
+    const normal = tasks.filter(t => !t.priority && !t.done);
+    const done = tasks.filter(t => t.done);
+    const ordered = [...priority, ...normal, ...done];
+
+    list.innerHTML = ordered.map(t => {
+      const i = tasks.indexOf(t);
+      return `
+      <div class="task-item ${t.done ? 'done' : ''} ${t.priority && !t.done ? 'priority' : ''} ${t.carried ? 'carried' : ''}">
+        <div class="task-check ${t.done ? 'checked' : ''}" onclick="toggleTask(${i})">${t.done ? '✓' : ''}</div>
+        <div class="task-body">
+          <div class="task-text ${t.done ? 'done' : ''}">${t.text}</div>
+          <div class="task-meta">
+            ${t.priority ? '<span class="badge badge-priority">⚡ priority</span>' : ''}
+            ${t.carried ? '<span class="badge badge-carried">↻ carried</span>' : ''}
+          </div>
+        </div>
+        <div class="task-actions">
+          ${!t.done ? `<button class="task-icon-btn toggle-priority" onclick="togglePriority(${i})" title="Toggle priority">${t.priority ? '★' : '☆'}</button>` : ''}
+          <button class="task-icon-btn" onclick="deleteTask(${i})" title="Delete">×</button>
+        </div>
+      </div>`;
+    }).join('');
+    updateStats();
+  }
+
+  function addTask() {
+    const input = document.getElementById('newTaskInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const max = parseInt(document.getElementById('maxTasks').value) || 7;
+    const active = tasks.filter(t => !t.done).length;
+    if (active >= max) { document.getElementById('limitWarning').classList.add('visible'); return; }
+
+    const priorityActive = tasks.filter(t => t.priority && !t.done).length;
+    if (newTaskIsPriority && priorityActive >= 3) {
+      alert('You already have 3 priority tasks. Complete one first.');
+      return;
+    }
+
+    tasks.push({ text, done: false, priority: newTaskIsPriority, carried: false, date: new Date().toDateString() });
+    saveTasks();
+    renderTasks();
+    input.value = '';
+    newTaskIsPriority = false;
+    document.getElementById('priorityBtn').classList.remove('active');
+  }
+
+  function toggleNewPriority() {
+    newTaskIsPriority = !newTaskIsPriority;
+    document.getElementById('priorityBtn').classList.toggle('active', newTaskIsPriority);
+  }
+
+  function toggleTask(i) {
+    tasks[i].done = !tasks[i].done;
+    saveTasks(); renderTasks();
+  }
+
+  function togglePriority(i) {
+    const priorityActive = tasks.filter((t, idx) => t.priority && !t.done && idx !== i).length;
+    if (!tasks[i].priority && priorityActive >= 3) { alert('Max 3 priority tasks.'); return; }
+    tasks[i].priority = !tasks[i].priority;
+    saveTasks(); renderTasks();
+  }
+
+  function deleteTask(i) {
+    tasks.splice(i, 1);
+    saveTasks(); renderTasks();
+  }
+
+  function clearDone() {
+    tasks = tasks.filter(t => !t.done);
+    saveTasks(); renderTasks();
+  }
+
+  function clearAll() {
+    if (confirm('Clear all tasks?')) { tasks = []; saveTasks(); renderTasks(); }
+  }
+
+  function rolloverTasks() {
+    const unfinished = tasks.filter(t => !t.done);
+    if (!unfinished.length) { alert('No unfinished tasks to carry.'); return; }
+    tasks = unfinished.map(t => ({ ...t, carried: true, date: new Date().toDateString() }));
+    saveTasks(); renderTasks();
+    alert(`${unfinished.length} task(s) carried over to today.`);
+  }
+
+  // Init
+  const saved = localStorage.getItem('ts_maxTasks');
+  if (saved) document.getElementById('maxTasks').value = saved;
+
+  const now = new Date();
+  document.getElementById('dateDisplay').textContent =
+    `📅 ${now.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' })}`;
+
+  renderTasks();
+</script>
+</body>
+</html>
