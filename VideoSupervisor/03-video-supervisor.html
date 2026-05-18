@@ -284,9 +284,9 @@ One insight about this specific video that will make the difference between aver
     const userContent = `Platform: ${platform}\nStyle: ${style}\nTarget length: ${length}\nConcept: ${concept || 'Not provided'}\n\nAvailable footage:\n${footage}`;
 
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("/api/claude", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": "sk_ant_api03_qW7q5DahUzgbYDmdeiVrOm9Dm9_PBndR1IqtUNd9xyu3kmnt87P3Q4QT10OtUnzJLmD9a8NSLdt1GapIKafFwA_UI7DzwAA", "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 1000,
