@@ -294,7 +294,7 @@ First meaningful milestone: [what does early traction look like?]
     const userContent = `Category: ${selectedCat}\nGoal: ${goal}\nBandwidth: ${bandwidth}\nAdditional context: ${context || 'None'}\n\nIdea:\n${idea}`;
 
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("/api/claude", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

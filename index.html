@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Director Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0c0a;
+    --surface: #121410;
+    --surface2: #1a1c18;
+    --border: #242620;
+    --accent: #b8d4a0;
+    --accent2: #94b87c;
+    --text: #e8ede0;
+    --muted: #656960;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.4;
+  }
+  .header {
+    padding: 48px 24px 40px;
+    border-bottom: 1px solid var(--border);
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .header-eyebrow { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  .header-title { font-family: 'DM Serif Display', serif; font-size: 40px; color: var(--text); line-height: 1.1; margin-bottom: 6px; }
+  .header-sub { font-size: 11px; color: var(--muted); }
+  .container { max-width: 720px; margin: 0 auto; padding: 32px 24px 80px; display: flex; flex-direction: column; gap: 12px; }
+  a.tool-card {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px 22px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  a.tool-card:hover { border-color: var(--accent2); background: var(--surface2); }
+  .tool-num { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .tool-name { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--text); margin-bottom: 6px; }
+  .tool-desc { font-size: 11px; color: var(--muted); line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-eyebrow">HO Studio</div>
+  <div class="header-title">Director Suite</div>
+  <div class="header-sub">AI-powered tools for content creators</div>
+</div>
+<div class="container">
+  <a class="tool-card" href="/task-supervisor">
+    <div class="tool-num">01</div>
+    <div class="tool-name">Task Supervisor</div>
+    <div class="tool-desc">Plan your day the night before. Set a task cap, mark priorities, and carry unfinished work forward.</div>
+  </a>
+  <a class="tool-card" href="/script-supervisor">
+    <div class="tool-num">02</div>
+    <div class="tool-name">Script Supervisor</div>
+    <div class="tool-desc">Paste a script and get brutally honest feedback — hook strength, problem, solution, CTA, what to cut.</div>
+  </a>
+  <a class="tool-card" href="/video-supervisor">
+    <div class="tool-num">03</div>
+    <div class="tool-name">Video Supervisor</div>
+    <div class="tool-desc">Describe your footage and target style. Get a full shot sequence, pacing plan, and retention-risk analysis.</div>
+  </a>
+  <a class="tool-card" href="/idea-supervisor">
+    <div class="tool-num">04</div>
+    <div class="tool-name">Idea Supervisor</div>
+    <div class="tool-desc">Pitch any idea. Get a viability score, market reality check, effort-to-reward ratio, and a Go / Wait / No-Go call.</div>
+  </a>
+  <a class="tool-card" href="/video-scriptwriter">
+    <div class="tool-num">05</div>
+    <div class="tool-name">Video Scriptwriter</div>
+    <div class="tool-desc">Give your concept and platform. Receive three complete script options, edit by component, and export.</div>
+  </a>
+</div>
+</body>
+</html>

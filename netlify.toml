@@ -1,0 +1,31 @@
+[build]
+  publish = "."
+
+[[edge_functions]]
+  path = "/api/claude"
+  function = "claude-proxy"
+
+[[redirects]]
+  from = "/task-supervisor"
+  to = "/TaskDirector/01-task-supervisor.html"
+  status = 200
+
+[[redirects]]
+  from = "/script-supervisor"
+  to = "/ScriptSupervisor/02-script-supervisor.html"
+  status = 200
+
+[[redirects]]
+  from = "/video-supervisor"
+  to = "/VideoSupervisor/03-video-supervisor.html"
+  status = 200
+
+[[redirects]]
+  from = "/idea-supervisor"
+  to = "/IdeaSupervisor/04-idea-supervisor.html"
+  status = 200
+
+[[redirects]]
+  from = "/video-scriptwriter"
+  to = "/VideoScriptwriter/05-video-scriptwriter.html"
+  status = 200
